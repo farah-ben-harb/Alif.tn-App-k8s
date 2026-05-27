@@ -1,0 +1,96 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: donation-service
+  namespace: alif
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: donation-service
+  template:
+    metadata:
+      labels:
+        app: donation-service
+    spec:
+      containers:
+        - name: donation-service
+          image: cyrinegaaloul/donation-service:dev
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8083
+              name: http
+          envFrom:
+            - configMapRef:
+                name: donation-service-config
+          env:
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: DB_PASSWORD
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: JWT_SECRET
+            - name: MAIL_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: MAIL_USERNAME
+            - name: MAIL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: MAIL_PASSWORD
+            - name: STRIPE_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: STRIPE_SECRET_KEY
+            - name: STRIPE_WEBHOOK_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: STRIPE_WEBHOOK_SECRET
+            - name: KONNECT_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: KONNECT_API_KEY
+            - name: KONNECT_RECEIVER_WALLET_ID
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: KONNECT_RECEIVER_WALLET_ID
+            - name: KONNECT_WEBHOOK_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: KONNECT_WEBHOOK_SECRET
+            - name: OPENCAGE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: OPENCAGE_API_KEY
+            - name: RECAPTCHA_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: RECAPTCHA_SECRET_KEY
+          startupProbe:
+            tcpSocket:
+              port: 8083
+            periodSeconds: 10
+            failureThreshold: 40
+          readinessProbe:
+            tcpSocket:
+              port: 8083
+            initialDelaySeconds: 90
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: 8083
+            initialDelaySeconds: 150
+            periodSeconds: 20

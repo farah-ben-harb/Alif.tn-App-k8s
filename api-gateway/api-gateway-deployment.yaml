@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway
+  namespace: alif
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api-gateway
+  template:
+    metadata:
+      labels:
+        app: api-gateway
+    spec:
+      containers:
+        - name: api-gateway
+          image: cyrinegaaloul/api-gateway:dev
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8082
+              name: http
+          envFrom:
+            - configMapRef:
+                name: api-gateway-config
+          env:
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: JWT_SECRET
+          startupProbe:
+            tcpSocket:
+              port: 8082
+            periodSeconds: 10
+            failureThreshold: 90
+          readinessProbe:
+            tcpSocket:
+              port: 8082
+            initialDelaySeconds: 180
+            periodSeconds: 10
+            failureThreshold: 6
+          livenessProbe:
+            tcpSocket:
+              port: 8082
+            initialDelaySeconds: 300
+            periodSeconds: 20
+            failureThreshold: 6

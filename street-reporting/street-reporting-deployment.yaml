@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: street-reporting-service
+  namespace: alif
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: street-reporting-service
+  template:
+    metadata:
+      labels:
+        app: street-reporting-service
+    spec:
+      containers:
+        - name: street-reporting-service
+          image: cyrinegaaloul/street-reporting:dev
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8087
+              name: http
+          envFrom:
+            - configMapRef:
+                name: street-reporting-config
+          env:
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: DB_PASSWORD
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: JWT_SECRET
+            - name: HF_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: HF_API_TOKEN
+          volumeMounts:
+            - name: street-reporting-uploads
+              mountPath: /app/uploads
+          startupProbe:
+            tcpSocket:
+              port: 8087
+            periodSeconds: 10
+            failureThreshold: 90
+          readinessProbe:
+            tcpSocket:
+              port: 8087
+            initialDelaySeconds: 180
+            periodSeconds: 10
+            failureThreshold: 6
+          livenessProbe:
+            tcpSocket:
+              port: 8087
+            initialDelaySeconds: 300
+            periodSeconds: 20
+            failureThreshold: 6
+      volumes:
+        - name: street-reporting-uploads
+          emptyDir: {}

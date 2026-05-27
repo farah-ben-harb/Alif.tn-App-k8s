@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-gateway-config
+  namespace: alif
+data:
+  EUREKA_DEFAULT_ZONE: http://discovery-server:8761/eureka/
+  USER_SERVICE_URL: http://user-service:8081
+  ALLOWED_ORIGINS: http://192.168.1.172:30080,https://peelable-gyrally-latarsha.ngrok-free.dev

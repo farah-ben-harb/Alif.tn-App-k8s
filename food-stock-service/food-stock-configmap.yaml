@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: food-stock-service-config
+  namespace: alif
+data:
+  ALIF_APP_DB_NAME: Alif.tn-app
+  DB_URL: jdbc:mysql://mysql:3306/Alif.tn-app?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
+  DB_USERNAME: root
+  EUREKA_DEFAULT_ZONE: http://discovery-server:8761/eureka/
+  OPENAPI_SERVER_URL: /
+  ALLOWED_ORIGINS: http://192.168.1.172:30080
+  OPENAI_FORECAST_ENABLED: "false"
+  FOOD_STOCK_INTERNAL_TOKEN: change-me-in-env

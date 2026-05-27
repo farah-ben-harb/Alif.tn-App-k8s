@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-init
+  namespace: alif
+data:
+  01-root-remote-access.sql: |
+    CREATE USER IF NOT EXISTS 'root'@'%' IDENTIFIED BY '';
+    GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION;
+    FLUSH PRIVILEGES;

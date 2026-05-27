@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: street-reporting-service
+  namespace: alif
+spec:
+  selector:
+    app: street-reporting-service
+  ports:
+    - name: http
+      port: 8087
+      targetPort: 8087
+  type: ClusterIP

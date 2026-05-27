@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vetnetwork-service
+  namespace: alif
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vetnetwork-service
+  template:
+    metadata:
+      labels:
+        app: vetnetwork-service
+    spec:
+      containers:
+        - name: vetnetwork-service
+          image: cyrinegaaloul/vetnetwork-service:dev
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8084
+              name: http
+          envFrom:
+            - configMapRef:
+                name: vetnetwork-service-config
+          env:
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: DB_PASSWORD
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: JWT_SECRET
+            - name: MAIL_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: MAIL_USERNAME
+            - name: MAIL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: MAIL_PASSWORD
+            - name: AI_OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: AI_OPENAI_API_KEY
+          startupProbe:
+            tcpSocket:
+              port: 8084
+            periodSeconds: 10
+            failureThreshold: 40
+          readinessProbe:
+            tcpSocket:
+              port: 8084
+            initialDelaySeconds: 90
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: 8084
+            initialDelaySeconds: 150
+            periodSeconds: 20

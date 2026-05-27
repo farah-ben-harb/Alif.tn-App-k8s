@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: donation-service-config
+  namespace: alif
+data:
+  ALIF_APP_DB_NAME: Alif.tn-app
+  DB_URL: jdbc:mysql://mysql:3306/Alif.tn-app?createDatabaseIfNotExist=true
+  DB_USERNAME: root
+  EUREKA_DEFAULT_ZONE: http://discovery-server:8761/eureka/
+  OPENAPI_SERVER_URL: /
+  APP_PUBLIC_BASE_URL: http://192.168.1.172:30080
+  ALLOWED_ORIGINS: http://192.168.1.172:30080
+  USER_SERVICE_URL: http://user-service:8081
+  FOOD_STOCK_SERVICE_URL: http://food-stock-service:8085
+  CHATBOT_BASE_URL: http://donation-chatbot-local:5005
+  KONNECT_WEBHOOK_URL: http://api-gateway:8082/api/donations/webhooks/konnect

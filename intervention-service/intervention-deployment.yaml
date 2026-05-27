@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: intervention-service
+  namespace: alif
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: intervention-service
+  template:
+    metadata:
+      labels:
+        app: intervention-service
+    spec:
+      containers:
+        - name: intervention-service
+          image: cyrinegaaloul/intervention-service:dev
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8086
+              name: http
+          envFrom:
+            - configMapRef:
+                name: intervention-service-config
+          env:
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: DB_PASSWORD
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: OPENAI_API_KEY
+            - name: GEMINI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: GEMINI_API_KEY
+          volumeMounts:
+            - name: intervention-uploads
+              mountPath: /app/uploads/interventions
+          startupProbe:
+            tcpSocket:
+              port: 8086
+            periodSeconds: 10
+            failureThreshold: 40
+          readinessProbe:
+            tcpSocket:
+              port: 8086
+            initialDelaySeconds: 90
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: 8086
+            initialDelaySeconds: 150
+            periodSeconds: 20
+      volumes:
+        - name: intervention-uploads
+          emptyDir: {}

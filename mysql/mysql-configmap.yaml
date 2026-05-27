@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-config
+  namespace: alif
+data:
+  MYSQL_DATABASE: Alif.tn-app

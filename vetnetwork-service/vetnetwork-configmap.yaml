@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vetnetwork-service-config
+  namespace: alif
+data:
+  ALIF_APP_DB_NAME: Alif.tn-app
+  DB_URL: jdbc:mysql://mysql:3306/Alif.tn-app?createDatabaseIfNotExist=true&serverTimezone=UTC&zeroDateTimeBehavior=CONVERT_TO_NULL&useLegacyDatetimeCode=false
+  DB_USERNAME: root
+  EUREKA_DEFAULT_ZONE: http://discovery-server:8761/eureka/
+  OPENAPI_SERVER_URL: /
+  ALLOWED_ORIGINS: http://192.168.1.172:30080
+  APP_WEBSITE_URL: http://192.168.1.172:30080
+  GOOGLE_CALENDAR_ENABLED: "false"
