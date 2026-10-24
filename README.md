@@ -1,136 +1,42 @@
-# Alif Private Cloud Kubernetes Deployment
+# Alif Private Cloud Kubernetes Manifests
 
-Kubernetes manifests for deploying the Alif application stack on a private cloud environment.
+Kubernetes manifests for the Alif application stack in a private cloud lab. This repository contains deployment configuration; it does not include the application source code or evidence of a running cluster.
 
-## Overview
+## Components
 
-This repository contains the Kubernetes resources required to deploy the Alif platform, including:
-
-- Namespace definition
-- MetalLB configuration for LoadBalancer exposure
-- MySQL database resources
-- Shared application secrets
-- Frontend deployment
-- API Gateway
-- Discovery Server
-- User Service
-- Donation Service
-- Food Stock Service
-- Intervention Service
-- Lost Animal Service
-- Street Reporting Service
-
-## Architecture
+- `namespace.yaml`: the `alif` namespace.
+- `metallb/`: an address pool and L2 advertisement for the frontend `LoadBalancer` service.
+- `mysql/`: MySQL configuration, initialization, a Deployment, and a Service. The file named `mysql-statefulset.yaml` currently defines a **Deployment**, not a StatefulSet.
+- `shared/`: an example application Secret. Example secret values must be replaced locally.
+- `frontend/`, `api-gateway/`, and `discovery-server/`: entry point and routing services.
+- `user-service/`, `donation-service/`, `food-stock-service/`, `intervention-service/`, `lost-animal-service/`, `street-reporting/`, and `vetnetwork-service/`: application workloads and Services.
 
 ```mermaid
 flowchart LR
-    Client[Client] --> Frontend[Frontend]
+    Client --> VIP[MetalLB address]
+    VIP --> Frontend
     Frontend --> Gateway[API Gateway]
-    Gateway --> Services[Platform Services]
-    Services --> MySQL[(MySQL)]
-    Services --> MetalLB[MetalLB]
-```
-
-## Repository Structure
-
-- `namespace.yaml` namespace bootstrap
-- `metallb/` load balancer configuration
-- `mysql/` database manifests
-- `shared/` shared resources and secret templates
-- `frontend/` frontend workload manifests
-- `api-gateway/` gateway manifests
-- `discovery-server/` discovery service manifests
-- `user-service/` user service manifests
-- `donation-service/` donation service manifests
-- `food-stock-service/` food stock service manifests
-- `intervention-service/` intervention service manifests
-- `lost-animal-service/` lost animal service manifests
-- `street-reporting/` reporting service manifests
-- `vetnetwork-service/` vet network service manifests
-
-## Deployment Notes
-
-- Keep secret values outside Git
-- Apply the namespace and shared resources before the application workloads
-- Validate image tags and service names before applying overlays
-
-## Branching and Commits
-
-- Use branches such as `feat/<area>`, `fix/<area>`, `docs/<area>`, or `k8s/<area>`
-- Keep commits tied to one manifest or one deployment concern
-- Prefer Conventional Commits such as `chore(k8s): update gateway image tag`
-- Avoid generic messages like `update`, `final`, or `test`
-
-## Contributing
-
-- Update only the manifests that are relevant to the change
-- Keep runtime secrets and local kubeconfig files out of the repository
-- Document rollout risk when changing shared infrastructure resources
-- Vet Network Service
-
-## Repository Structure
-
-```text
-k8s/
-|-- namespace.yaml
-|-- metallb/
-|-- mysql/
-|-- shared/
-|-- frontend/
-|-- api-gateway/
-|-- discovery-server/
-|-- user-service/
-|-- donation-service/
-|-- food-stock-service/
-|-- intervention-service/
-|-- lost-animal-service/
-|-- street-reporting/
-`-- vetnetwork-service/
+    Gateway --> Services[Application services]
+    Services --> MySQL
 ```
 
 ## Prerequisites
 
-- A working Kubernetes cluster
-- `kubectl` configured against the target cluster
-- MetalLB installed in the cluster
-- Container image access for the referenced application images
+- A Kubernetes cluster and `kubectl` configured for it.
+- MetalLB installed before applying the resources in `metallb/`.
+- Access to the container images referenced by the manifests.
+- A suitable address range in [`metallb/ipaddresspool.yaml`](metallb/ipaddresspool.yaml); the checked-in range is specific to one lab network.
 
-## Before Deployment
+## Before deployment
 
-1. Copy the example secret files and replace placeholder values:
+Review image tags, Service names, ConfigMaps, and Secret references for the target cluster. The `:dev` image tags in the manifests are mutable. The `*.example.yaml` files are templates, not production credentials; create real Secrets through a secure local workflow and keep their values out of Git.
 
-```powershell
-Copy-Item .\shared\app-secrets.example.yaml .\shared\app-secrets.yaml
-Copy-Item .\mysql\mysql-secret.example.yaml .\mysql\mysql-secret.yaml
-```
+**The current MySQL manifest is for an isolated lab only.** It sets `MYSQL_ALLOW_EMPTY_PASSWORD=yes`, and its data directory uses `emptyDir`, which is lost when the Pod is replaced. The `mysql-secret.example.yaml` template is not wired into the MySQL Deployment. Before using this stack with real data or in a shared environment, replace the empty-password setting with a Secret reference and add persistent storage. Do not describe the current database as durable or secured.
 
-2. Update the MetalLB address pool in [metallb/ipaddresspool.yaml](/D:/Alif.tn-App-main/k8s/metallb/ipaddresspool.yaml) if your private cloud uses a different IP range.
+After addressing those limits, apply the namespace first, then MetalLB resources and required Secrets/ConfigMaps, then MySQL and discovery, and finally the gateway, application services, and frontend. Verify workload readiness and Service endpoints with `kubectl` after each stage.
 
-3. Review container image tags if you want to deploy versions other than `:dev`.
+## Contributing
 
-## Deployment Order
-
-Apply the manifests in a safe order:
-
-```powershell
-kubectl apply -f .\namespace.yaml
-kubectl apply -f .\metallb\
-kubectl apply -f .\shared\
-kubectl apply -f .\mysql\
-kubectl apply -f .\discovery-server\
-kubectl apply -f .\api-gateway\
-kubectl apply -f .\user-service\
-kubectl apply -f .\donation-service\
-kubectl apply -f .\food-stock-service\
-kubectl apply -f .\intervention-service\
-kubectl apply -f .\lost-animal-service\
-kubectl apply -f .\street-reporting\
-kubectl apply -f .\vetnetwork-service\
-kubectl apply -f .\frontend\
-```
-
-## Notes
-
-- The frontend service is exposed as a `LoadBalancer`.
-- Internal services are exposed inside the cluster through Kubernetes services.
-- Secret templates are included in this repository, but real credentials should stay local or be managed through a secure secret workflow.
+- Keep credentials, local kubeconfig files, and generated artifacts out of the repository.
+- Update only the manifests relevant to a change and document any rollout risk.
+- Keep the README aligned with the Kubernetes resource kinds and actual Secret references.
