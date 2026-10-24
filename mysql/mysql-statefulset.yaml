@@ -26,36 +26,36 @@ spec:
                 configMapKeyRef:
                   name: mysql-config
                   key: MYSQL_DATABASE
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: MYSQL_ROOT_PASSWORD
             - name: MYSQL_ROOT_HOST
-              value: "%"
-            - name: MYSQL_ALLOW_EMPTY_PASSWORD
-              value: "yes"
+              value: localhost
+            - name: MYSQL_USER
+              value: alif
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: MYSQL_PASSWORD
           volumeMounts:
             - name: mysql-data
               mountPath: /var/lib/mysql
-            - name: mysql-init
-              mountPath: /docker-entrypoint-initdb.d
           readinessProbe:
-            exec:
-              command:
-                - sh
-                - -c
-                - mysqladmin ping -h 127.0.0.1 -uroot
+            tcpSocket:
+              port: 3306
             initialDelaySeconds: 60
             timeoutSeconds: 5
             periodSeconds: 10
           livenessProbe:
-            exec:
-              command:
-                - sh
-                - -c
-                - mysqladmin ping -h 127.0.0.1 -uroot
+            tcpSocket:
+              port: 3306
             initialDelaySeconds: 120
             timeoutSeconds: 5
             periodSeconds: 20
       volumes:
         - name: mysql-data
-          emptyDir: {}
-        - name: mysql-init
-          configMap:
-            name: mysql-init
+          persistentVolumeClaim:
+            claimName: mysql-data

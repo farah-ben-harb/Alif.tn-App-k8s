@@ -6,7 +6,7 @@ Kubernetes manifests for the Alif application stack in a private cloud lab. This
 
 - `namespace.yaml`: the `alif` namespace.
 - `metallb/`: an address pool and L2 advertisement for the frontend `LoadBalancer` service.
-- `mysql/`: MySQL configuration, initialization, a Deployment, and a Service. The file named `mysql-statefulset.yaml` currently defines a **Deployment**, not a StatefulSet.
+- `mysql/`: MySQL configuration, a Secret template, a PersistentVolumeClaim, a Deployment, and a Service. The file named `mysql-statefulset.yaml` still defines a **Deployment**, not a StatefulSet.
 - `shared/`: an example application Secret. Example secret values must be replaced locally.
 - `frontend/`, `api-gateway/`, and `discovery-server/`: entry point and routing services.
 - `user-service/`, `donation-service/`, `food-stock-service/`, `intervention-service/`, `lost-animal-service/`, `street-reporting/`, and `vetnetwork-service/`: application workloads and Services.
@@ -29,11 +29,13 @@ flowchart LR
 
 ## Before deployment
 
-Review image tags, Service names, ConfigMaps, and Secret references for the target cluster. The `:dev` image tags in the manifests are mutable. The `*.example.yaml` files are templates, not production credentials; create real Secrets through a secure local workflow and keep their values out of Git.
+Review image tags, Service names, ConfigMaps, and Secret references for the target cluster. The `:dev` image tags in the manifests are mutable. The `*.example.yaml` files are templates, not production credentials. Create `mysql/mysql-secret.yaml` and `shared/app-secrets.yaml` from the templates with real values in a secure local workflow; both target paths are ignored by Git. Never apply the example files with their placeholder values.
 
-**The current MySQL manifest is for an isolated lab only.** It sets `MYSQL_ALLOW_EMPTY_PASSWORD=yes`, and its data directory uses `emptyDir`, which is lost when the Pod is replaced. The `mysql-secret.example.yaml` template is not wired into the MySQL Deployment. Before using this stack with real data or in a shared environment, replace the empty-password setting with a Secret reference and add persistent storage. Do not describe the current database as durable or secured.
+The MySQL Deployment reads root and application passwords from `mysql-secret`. It sets `MYSQL_ROOT_HOST=localhost` and creates the `alif` database user for application services on a **new** data volume. Its data directory uses the `mysql-data` PVC; the cluster needs a working default StorageClass or an appropriate `storageClassName` in [`mysql/mysql-pvc.yaml`](mysql/mysql-pvc.yaml). The application services read the same application password from `mysql-secret`.
 
-After addressing those limits, apply the namespace first, then MetalLB resources and required Secrets/ConfigMaps, then MySQL and discovery, and finally the gateway, application services, and frontend. Verify workload readiness and Service endpoints with `kubectl` after each stage.
+**Existing installations require a migration plan.** The previous manifest used an empty password, remote root access, and ephemeral `emptyDir` storage. Applying the new Deployment will not copy data from the old Pod. Export data before changing the workload and restore it into the new PVC. MySQL initialization variables only affect a new data directory; if reusing an initialized database, rotate its credentials and remove any old remote root account manually.
+
+For a new installation, apply the namespace first, then MetalLB resources, the real Secrets, the MySQL ConfigMap and PVC, the MySQL Deployment and Service, and finally discovery, gateway, application services, and frontend. Do not use `kubectl apply -f mysql/` or `kubectl apply -f shared/`: those directories contain example Secret files. Verify PVC binding, MySQL readiness, and application Service endpoints with `kubectl` after each stage.
 
 ## Contributing
 

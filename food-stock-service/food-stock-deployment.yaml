@@ -27,8 +27,8 @@ spec:
             - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: app-secrets
-                  key: DB_PASSWORD
+                  name: mysql-secret
+                  key: MYSQL_PASSWORD
             - name: JWT_SECRET
               valueFrom:
                 secretKeyRef:

@@ -6,7 +6,7 @@ metadata:
 data:
   ALIF_APP_DB_NAME: Alif.tn-app
   DB_URL: jdbc:mysql://mysql:3306/Alif.tn-app?createDatabaseIfNotExist=true
-  DB_USERNAME: root
+  DB_USERNAME: alif
   EUREKA_DEFAULT_ZONE: http://discovery-server:8761/eureka/
   OPENAPI_SERVER_URL: /
   APP_PUBLIC_BASE_URL: http://192.168.1.172:30080
